@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from "./ui/button";
@@ -6,22 +6,63 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 
-export default function SignUpPage() {
+export default function SignUpUser() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState(null); // Store selected course ID
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); 
   const navigate = useNavigate();
+
+  // Fetch courses when the component mounts
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/courses');
+        setCourses(response.data); // Assume this is an array of courses
+        if (response.data.length > 0) {
+          setSelectedCourseId(response.data[0].id); // Set the first course as default if available
+        }
+      } catch (err) {
+        console.error('Failed to fetch courses', err);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/api/auth/signupuser', { name, email, password });
-      console.log(response);
       if (response.data.success) {
         alert("Sign Up Successful!");
-        navigate('/CoursePage'); // Redirect to homepage after signup
+        
+        // After signup, log the user in
+        const loginResponse = await axios.post('http://localhost:5000/api/auth/userlogin', { email, password });
+        if (loginResponse.data.success) {
+          localStorage.setItem('token', loginResponse.data.authtoken); // Store auth token
+
+          // Automatically enroll the user in the selected course after signup and login
+          const courseId = selectedCourseId; // Use the selected course ID
+
+          if (courseId) {
+            const enrollmentResponse = await axios.post(
+              'http://localhost:5000/api/enroll',
+              { courseId },
+              { headers: { Authorization: `Bearer ${loginResponse.data.authtoken}` } }
+            );
+
+            if (enrollmentResponse.status === 200) {
+              alert("Enrolled successfully!");
+              navigate('/'); // Redirect to the course page after enrollment
+            } else {
+              setError('Failed to enroll in the course. Please try again.');
+            }
+          }
+        }
       }
     } catch (err) {
       setError(err.response?.data?.error || "An error occurred. Please try again.");
@@ -37,7 +78,7 @@ export default function SignUpPage() {
       if (response.data.success) {
         alert("Login Successful!");
         localStorage.setItem('token', response.data.authtoken); // Store auth token
-        navigate('/CoursePage'); // Redirect to dashboard or mentor-specific page
+        navigate('/'); // Redirect to dashboard or mentor-specific page
       }
     } catch (err) {
       setError(err.response?.data?.error || "Invalid login credentials.");
@@ -94,6 +135,24 @@ export default function SignUpPage() {
                 className="bg-slate-700 text-slate-100 border-slate-600"
               />
             </div>
+
+            {/* Course Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="course" className="text-slate-200">Select a Course</Label>
+              <select
+                id="course"
+                value={selectedCourseId}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="bg-slate-700 text-slate-100 border-slate-600 w-full"
+              >
+                {courses.map(course => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <Button type="submit" className="w-full bg-teal-500 text-slate-900 hover:bg-teal-400">
               Sign Up

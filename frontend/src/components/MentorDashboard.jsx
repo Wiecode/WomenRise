@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCourses } from './context/CourseContext'; // Import the custom hook
+import EnrolledUsers from './EnrolledUsers'; // Import the EnrolledUsers component
 
 const MentorDashboard = () => {
-  const { addCourse } = useCourses(); // Use the context to add course to the global state
+  const { addCourse, courses } = useCourses(); // Use the context to add courses and fetch existing ones
   const [courseDetails, setCourseDetails] = useState({
     title: '',
     description: '',
@@ -144,6 +145,15 @@ const MentorDashboard = () => {
           {loading ? 'Uploading...' : 'Add New Course'}
         </button>
       </form>
+
+      {/* Display Enrolled Users for Each Course */}
+      <div>
+      {courses.map((course) => {
+  console.log('Course:', course);  // Log course to check if it's passed correctly
+  return <EnrolledUsers key={course._id} courseId={course._id} courseTitle={course.title} />;
+})}
+
+      </div>
     </div>
   );
 };

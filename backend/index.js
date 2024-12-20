@@ -13,7 +13,7 @@ app.use(express.json())
 
 app.use('/api/auth',require('./routes/auth'))
 app.use('/api/UploadCourse',require('./routes/UploadCourse'))
-
+app.use('/api/',require('./routes/Enroll'))
 
 app.listen(port, () => {
   console.log(`Example app listening on http://localhost:${port}  `)
