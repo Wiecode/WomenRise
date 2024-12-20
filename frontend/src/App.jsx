@@ -1,15 +1,24 @@
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import Home from "./components/Home.jsx"
+import { BrowserRouter as Router } from 'react-router-dom';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import AppRoutes from './routes/AppRoutes';
+import Chatbot from './components/Chatbot';
+import './app.css';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="App">
-        <Home />
+    <Router>
+      <div className="min-h-screen bg-slate-900 text-slate-100">
+        <Header />
+        <main>
+          <AppRoutes />
+        </main>
+        <Footer />
+        <Chatbot />
       </div>
-    </BrowserRouter>
+    </Router>
   );
 }
 
 export default App;
+
