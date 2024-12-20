@@ -6,7 +6,8 @@ import NetworkPage from '../components/NetworkPage';
 import ResourcesPage from '../components/ResourcesPage';
 import BusinessGrowthPage from '../components/BusinessGrowthPage';
 import SignUpPage from '../components/SignUpPage';
-
+import MentorDashboard from '../components/MentorDashboard';
+import SignUpUser from '../components/SignUpUser';
 function AppRoutes() {
   return (
     <Routes>
@@ -17,6 +18,10 @@ function AppRoutes() {
       <Route path="/resources" element={<ResourcesPage />} />
       <Route path="/business-growth" element={<BusinessGrowthPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/MentorDashboard" element={<MentorDashboard />}/>
+      <Route path="/signupuser" element={<SignUpUser />}/>
+      <Route path="/CoursePage" element={<CoursePage />}
+       />
     </Routes>
   );
 }

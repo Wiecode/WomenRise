@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -9,14 +10,43 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); 
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    // Here you would typically handle the sign-up process
-    console.log('Sign up submitted:', { name, email, password });
-    // For now, we'll just redirect to the home page
-    navigate('/');
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/creatementor', { name, email, password });
+      console.log(response);
+      if (response.data.success) {
+        alert("Sign Up Successful!");
+        navigate('/MentorDashboard'); // Redirect to homepage after signup
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || "An error occurred. Please try again.");
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const loginEmail = document.getElementById("login-email").value;
+      const loginPassword = document.getElementById("login-password").value;
+      const response = await axios.post('http://localhost:5000/api/auth/login', { email: loginEmail, password: loginPassword });
+      if (response.data.success) {
+        alert("Login Successful!");
+        localStorage.setItem('token', response.data.authtoken); // Store auth token
+        navigate('/MentorDashboard'); // Redirect to dashboard or mentor-specific page
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || "Invalid login credentials.");
+    }
+  };
+
+  const toggleLoginModal = () => {
+    setIsLoginModalOpen(!isLoginModalOpen);
+    setError(''); // Clear any previous errors
   };
 
   return (
@@ -27,7 +57,7 @@ export default function SignUpPage() {
           <CardDescription className="text-center text-slate-300">Start your entrepreneurial journey today</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-slate-200">Full Name</Label>
               <Input 
@@ -64,16 +94,61 @@ export default function SignUpPage() {
                 className="bg-slate-700 text-slate-100 border-slate-600"
               />
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <Button type="submit" className="w-full bg-teal-500 text-slate-900 hover:bg-teal-400">
               Sign Up
             </Button>
+            <p className="text-center text-slate-400 mt-4">
+              <button type="button" onClick={toggleLoginModal} className="text-teal-400 hover:underline">
+                Already Have an Account?
+              </button>
+            </p>
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm text-slate-400">
           By signing up, you agree to our Terms of Service and Privacy Policy.
         </CardFooter>
       </Card>
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-slate-800 p-6 rounded-lg max-w-md w-full">
+            <h2 className="text-teal-400 text-xl font-bold text-center mb-4">Login to WomenRise</h2>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="login-email" className="text-slate-200">Email</Label>
+                <Input 
+                  id="login-email" 
+                  type="email" 
+                  placeholder="Enter your email"
+                  className="bg-slate-700 text-slate-100 border-slate-600"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="login-password" className="text-slate-200">Password</Label>
+                <Input 
+                  id="login-password" 
+                  type="password" 
+                  placeholder="Enter your password"
+                  className="bg-slate-700 text-slate-100 border-slate-600"
+                  required
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <Button type="submit" className="w-full bg-teal-500 text-slate-900 hover:bg-teal-400">
+                Login
+              </Button>
+            </form>
+            <Button 
+              onClick={toggleLoginModal} 
+              className="w-full mt-4 bg-red-500 text-slate-100 hover:bg-red-400">
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
